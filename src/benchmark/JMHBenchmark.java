@@ -6,6 +6,7 @@ import org.openjdk.jmh.runner.Runner;
 import org.openjdk.jmh.runner.RunnerException;
 import org.openjdk.jmh.runner.options.Options;
 import org.openjdk.jmh.runner.options.OptionsBuilder;
+import org.openjdk.jmh.runner.options.TimeValue;
 import solutions.ParallelFinderGlobalHashMap;
 import solutions.ParallelFinderSubtotals;
 import solutions.SequentialFinder;
@@ -15,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * JMH benchmark for comparing sequential and parallel implementations
- * To use this, you need to add JMH dependencies to your project
+ * Updated to work with all test images and up to 128 threads
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -25,13 +26,22 @@ import java.util.concurrent.TimeUnit;
 @State(Scope.Benchmark)
 public class JMHBenchmark {
 
-    @Param({"images/place_2k_2k.png"})
+    // Using all the images from the previous example
+    @Param({
+            "images/place_2k_2k.png",
+            "images/place_20k_2k.png",
+            "images/place_20k_20k.png",
+            "images/place_20k_20k_discoloured.png",
+            "images/place_23k_23k.png"
+    })
     private String imageFile;
 
-    @Param({"1", "2", "4", "8"})
+    // Allowing up to 128 threads
+    @Param({"1", "2", "4", "8", "16", "32", "64", "128"})
     private int cores;
 
-    @Param({"1", "10", "50", "100", "500", "2147483647"}) // Integer.MAX_VALUE as the last value
+    // Various thresholds for the subtotals implementation
+    @Param({"1", "10", "50", "100", "500", "1000", "2147483647"}) // Integer.MAX_VALUE as the last value
     private int threshold;
 
     private Image img;
@@ -63,9 +73,17 @@ public class JMHBenchmark {
     }
 
     public static void main(String[] args) throws RunnerException {
+        // Setting the duration of the benchmark to run within 4 hours
         Options options = new OptionsBuilder()
                 .include(JMHBenchmark.class.getSimpleName())
+                .threads(Runtime.getRuntime().availableProcessors())  // Use all available cores
+                .warmupIterations(3)
+                .measurementIterations(5)
+                .forks(1)
+                .jvmArgs("-Xms4g", "-Xmx64g") // JVM memory arguments for large image processing
+                .timeout(TimeValue.seconds(14400)) // Ensure the benchmark runs within 4 hours
                 .build();
+
         new Runner(options).run();
     }
 }
