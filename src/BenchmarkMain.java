@@ -3,6 +3,9 @@ import solutions.ParallelFinderGlobalHashMap;
 import solutions.ParallelFinderSubtotals;
 import solutions.SequentialFinder;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.AbstractMap;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
@@ -13,57 +16,118 @@ import java.util.concurrent.TimeUnit;
 public class BenchmarkMain {
     private static final int WARMUP_ITERATIONS = 3;
     private static final int MEASUREMENT_ITERATIONS = 5;
+    private static final String RESULT_FILE = "benchmark_results.txt";  // Output file for results
+    private static final long RUN_TIME_MS = 3 * 60 * 60 * 1000L;  // 3 hours in milliseconds
 
     public static void main(String[] args) {
-        // Change this to use a different image file
-        String imageFile = "images/place_2k_2k.png";
-        Image img = new Image(imageFile);
+        // List of image files to benchmark
+        String[] imageFiles = {
+                "images/place_2k_2k.png",
+                "images/place_20k_2k.png",
+                "images/place_20k_20k.png",
+                "images/place_20k_20k_discoloured.png",
+                "images/place_23k_23k.png"
+        };
 
-        System.out.println("Image: " + imageFile);
-        System.out.println("Image dimensions: " + img.width + "x" + img.height);
+        // Try with resources for file writing
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(RESULT_FILE))) {
+            writer.write("Image, Cores, Avg. Time (ms), Max Time (ms), Min Time (ms), Std Dev (ms), Speedup\n");
 
-        // Benchmark sequential implementation
-        System.out.println("\n=== Sequential Implementation ===");
-        BenchmarkResult seqResult = benchmarkSequential(img);
-        printBenchmarkResult(seqResult);
+            // Start time of the benchmark
+            long startTime = System.currentTimeMillis();
+            long elapsedTime = 0;
 
-        // Benchmark parallel implementation with global hashmap for different numbers of cores
-        System.out.println("\n=== Parallel Implementation with Global HashMap ===");
-        int[] coreCounts = {1, 2, 4, 8};
-        for (int cores : coreCounts) {
-            System.out.println("\nCores: " + cores);
-            BenchmarkResult parallelGlobalResult = benchmarkParallelGlobal(img, cores);
-            printBenchmarkResult(parallelGlobalResult);
+            // Repeat the benchmark until the total time exceeds 3 hours
+            while (elapsedTime < RUN_TIME_MS) {
+                // Benchmark each image file
+                for (String imageFile : imageFiles) {
+                    Image img = new Image(imageFile);
+                    System.out.println("Image: " + imageFile);
+                    System.out.println("Image dimensions: " + img.width + "x" + img.height);
 
-            // Calculate speedup
-            double speedup = seqResult.avgTime / parallelGlobalResult.avgTime;
-            System.out.printf("Speedup: %.2f\n", speedup);
-        }
+                    // Benchmark sequential implementation
+                    System.out.println("\n=== Sequential Implementation ===");
+                    BenchmarkResult seqResult = benchmarkSequential(img);
+                    printBenchmarkResult(seqResult);
 
-        // Benchmark parallel implementation with subtotals for different numbers of cores
-        // First with sequential Y processing (T = Integer.MAX_VALUE)
-        System.out.println("\n=== Parallel Implementation with Subtotals (Sequential Y) ===");
-        for (int cores : coreCounts) {
-            System.out.println("\nCores: " + cores);
-            BenchmarkResult parallelSubtotalsResult = benchmarkParallelSubtotals(img, cores, Integer.MAX_VALUE);
-            printBenchmarkResult(parallelSubtotalsResult);
+                    // Benchmark parallel implementation with global hashmap for different numbers of cores
+                    System.out.println("\n=== Parallel Implementation with Global HashMap ===");
+                    int[] coreCounts = {1, 2, 4, 8, 16, 32, 64, 128};
+                    for (int cores : coreCounts) {
+                        System.out.println("\nCores: " + cores);
+                        BenchmarkResult parallelGlobalResult = benchmarkParallelGlobal(img, cores);
+                        printBenchmarkResult(parallelGlobalResult);
 
-            // Calculate speedup
-            double speedup = seqResult.avgTime / parallelSubtotalsResult.avgTime;
-            System.out.printf("Speedup: %.2f\n", speedup);
-        }
+                        // Calculate speedup
+                        double speedup = seqResult.avgTime / parallelGlobalResult.avgTime;
 
-        // Then benchmark with different thresholds for Y-axis parallelization (Phase 2)
-        System.out.println("\n=== Parallel Implementation with Subtotals (Parallel X and Y) ===");
-        int[] thresholds = {1, 10, 20, 50, 100, 200, 500};
-        for (int threshold : thresholds) {
-            System.out.println("\nCores: " + Runtime.getRuntime().availableProcessors() + ", Threshold: " + threshold);
-            BenchmarkResult parallelSubtotalsResult = benchmarkParallelSubtotals(img, Runtime.getRuntime().availableProcessors(), threshold);
-            printBenchmarkResult(parallelSubtotalsResult);
+                        // Write to file in CSV format
+                        writer.write(String.format("%s, %d, %.2f, %.2f, %.2f, %.2f, %.2f\n",
+                                imageFile, cores,
+                                parallelGlobalResult.avgTime / 1_000_000.0,
+                                parallelGlobalResult.maxTime / 1_000_000.0,
+                                parallelGlobalResult.minTime / 1_000_000.0,
+                                parallelGlobalResult.stdDev / 1_000_000.0,
+                                speedup));
+                    }
 
-            // Calculate speedup
-            double speedup = seqResult.avgTime / parallelSubtotalsResult.avgTime;
-            System.out.printf("Speedup: %.2f\n", speedup);
+                    // Benchmark parallel implementation with subtotals for different numbers of cores
+                    // First with sequential Y processing (T = Integer.MAX_VALUE)
+                    System.out.println("\n=== Parallel Implementation with Subtotals (Sequential Y) ===");
+                    for (int cores : coreCounts) {
+                        System.out.println("\nCores: " + cores);
+                        BenchmarkResult parallelSubtotalsResult = benchmarkParallelSubtotals(img, cores, Integer.MAX_VALUE);
+                        printBenchmarkResult(parallelSubtotalsResult);
+
+                        // Calculate speedup
+                        double speedup = seqResult.avgTime / parallelSubtotalsResult.avgTime;
+
+                        // Write to file in CSV format
+                        writer.write(String.format("%s, %d, %.2f, %.2f, %.2f, %.2f, %.2f\n",
+                                imageFile, cores,
+                                parallelSubtotalsResult.avgTime / 1_000_000.0,
+                                parallelSubtotalsResult.maxTime / 1_000_000.0,
+                                parallelSubtotalsResult.minTime / 1_000_000.0,
+                                parallelSubtotalsResult.stdDev / 1_000_000.0,
+                                speedup));
+                    }
+
+                    // Then benchmark with different thresholds for Y-axis parallelization (Phase 2)
+                    System.out.println("\n=== Parallel Implementation with Subtotals (Parallel X and Y) ===");
+                    int[] thresholds = {1, 10, 20, 50, 100, 200, 500};
+                    for (int threshold : thresholds) {
+                        System.out.println("\nCores: " + Runtime.getRuntime().availableProcessors() + ", Threshold: " + threshold);
+                        BenchmarkResult parallelSubtotalsResult = benchmarkParallelSubtotals(img, Runtime.getRuntime().availableProcessors(), threshold);
+                        printBenchmarkResult(parallelSubtotalsResult);
+
+                        // Calculate speedup
+                        double speedup = seqResult.avgTime / parallelSubtotalsResult.avgTime;
+
+                        // Write to file in CSV format
+                        writer.write(String.format("%s, %d, %.2f, %.2f, %.2f, %.2f, %.2f\n",
+                                imageFile, Runtime.getRuntime().availableProcessors(),
+                                parallelSubtotalsResult.avgTime / 1_000_000.0,
+                                parallelSubtotalsResult.maxTime / 1_000_000.0,
+                                parallelSubtotalsResult.minTime / 1_000_000.0,
+                                parallelSubtotalsResult.stdDev / 1_000_000.0,
+                                speedup));
+                    }
+                }
+
+                // Calculate elapsed time
+                elapsedTime = System.currentTimeMillis() - startTime;
+                System.out.println("Elapsed time: " + (elapsedTime / 1000) + " seconds");
+
+                // Optional: Print status every 10 minutes
+                if (elapsedTime % (10 * 60 * 1000) < 1000) {
+                    System.out.println("Benchmark still running... " + (elapsedTime / 1000) + " seconds elapsed.");
+                }
+            }
+
+            System.out.println("\nBenchmark results written to: " + RESULT_FILE);
+
+        } catch (IOException e) {
+            System.err.println("Error writing benchmark results to file: " + e.getMessage());
         }
     }
 
