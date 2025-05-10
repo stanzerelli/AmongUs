@@ -99,7 +99,7 @@ public class OptimizedJMHBenchmark {
                 .include(OptimizedJMHBenchmark.class.getSimpleName())
                 // Use this to run specific benchmarks if needed
                 //.param("imageFile", "images/place_2k_2k.png")
-                // .param("cores", "128")
+                .param("cores", "8")
                 // .param("threshold", "100")
                 .threads(Runtime.getRuntime().availableProcessors())
                 .jvmArgs("-Xms4g", "-Xmx64g")
