@@ -16,12 +16,12 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * JMH benchmark for comparing sequential and parallel implementations
- * Updated to work with all test images and up to 128 threads
+ * Optimized for all test images and using up to 128 cores.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-@Warmup(iterations = 3)
-@Measurement(iterations = 5)
+@Warmup(iterations = 1, time = 1, timeUnit = TimeUnit.SECONDS) // Reduced warmup for faster startup
+@Measurement(iterations = 2, time = 2, timeUnit = TimeUnit.SECONDS) // Reduced measurement iterations
 @Fork(1)
 @State(Scope.Benchmark)
 public class JMHBenchmark {
@@ -41,7 +41,7 @@ public class JMHBenchmark {
     private int cores;
 
     // Various thresholds for the subtotals implementation
-    @Param({"1", "10", "50", "100", "500", "1000", "2147483647"}) // Integer.MAX_VALUE as the last value
+    @Param({"1", "10", "50", "100", "500", "1000"}) // Limited threshold values for faster results
     private int threshold;
 
     private Image img;
@@ -73,12 +73,11 @@ public class JMHBenchmark {
     }
 
     public static void main(String[] args) throws RunnerException {
-        // Setting the duration of the benchmark to run within 4 hours
         Options options = new OptionsBuilder()
                 .include(JMHBenchmark.class.getSimpleName())
-                .threads(Runtime.getRuntime().availableProcessors())  // Use all available cores
-                .warmupIterations(3)
-                .measurementIterations(5)
+                .threads(128)  // Use all 128 threads available on your machine
+                .warmupIterations(1) // Reduced warmup iterations
+                .measurementIterations(2) // Reduced measurement iterations
                 .forks(1)
                 .jvmArgs("-Xms4g", "-Xmx64g") // JVM memory arguments for large image processing
                 .timeout(TimeValue.seconds(14400)) // Ensure the benchmark runs within 4 hours
