@@ -38,7 +38,7 @@ public class OptimizedJMHBenchmark {
     private String imageFile;
 
     // Focused set of thread counts to understand scaling while keeping runtime reasonable
-    @Param({"1", "4", "16", "32", "64", "128"})
+    @Param({"1", "4"})
     private int cores;
 
     // Reduced set of threshold values for subtotals implementation
@@ -98,7 +98,7 @@ public class OptimizedJMHBenchmark {
         Options options = new OptionsBuilder()
                 .include(OptimizedJMHBenchmark.class.getSimpleName())
                 // Use this to run specific benchmarks if needed
-                // .param("imageFile", "images/place_2k_2k.png")
+                //.param("imageFile", "images/place_2k_2k.png")
                 // .param("cores", "128")
                 // .param("threshold", "100")
                 .threads(Runtime.getRuntime().availableProcessors())
