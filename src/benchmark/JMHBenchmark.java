@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * JMH benchmark for comparing sequential and parallel implementations
- * Optimized for all test images and using up to 128 cores.
+ * This one isn't used, but it is a good example of how to use JMH.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
@@ -75,12 +75,12 @@ public class JMHBenchmark {
     public static void main(String[] args) throws RunnerException {
         Options options = new OptionsBuilder()
                 .include(JMHBenchmark.class.getSimpleName())
-                .threads(128)  // Use all 128 threads available on your machine
+                .threads(128)  // Use all 128 threads available on machine
                 .warmupIterations(1) // Reduced warmup iterations
                 .measurementIterations(2) // Reduced measurement iterations
                 .forks(1)
                 .jvmArgs("-Xms4g", "-Xmx64g") // JVM memory arguments for large image processing
-                .timeout(TimeValue.seconds(14400)) // Ensure the benchmark runs within 4 hours
+                // .timeout(TimeValue.seconds(14400))
                 .build();
 
         new Runner(options).run();

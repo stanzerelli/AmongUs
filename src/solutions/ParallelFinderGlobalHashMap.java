@@ -8,6 +8,10 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveAction;
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * Parallel implementation of the AmongiFinder interface using a global hash map
+ * and the Fork/Join framework for parallel processing.
+ */
 public class ParallelFinderGlobalHashMap implements AmongiFinder {
     final int p; // The number of cores used by the Fork/Join Framework.
     private final ForkJoinPool pool;

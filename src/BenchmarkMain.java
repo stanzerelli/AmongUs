@@ -17,7 +17,7 @@ public class BenchmarkMain {
     private static final int WARMUP_ITERATIONS = 3;
     private static final int MEASUREMENT_ITERATIONS = 5;
     private static final String RESULT_FILE = "benchmark_results.txt";  // Output file for results
-    private static final long RUN_TIME_MS = 3 * 60 * 60 * 1000L;  // 3 hours in milliseconds
+    private static final long RUN_TIME_MS = 3 * 60 * 60 * 1000L;  // hours in milliseconds
 
     public static void main(String[] args) {
         // List of image files to benchmark
@@ -37,7 +37,7 @@ public class BenchmarkMain {
             long startTime = System.currentTimeMillis();
             long elapsedTime = 0;
 
-            // Repeat the benchmark until the total time exceeds 3 hours
+            // Repeat the benchmark until the total time exceeds RUN_TIME_MS
             while (elapsedTime < RUN_TIME_MS) {
                 // Benchmark each image file
                 for (String imageFile : imageFiles) {
