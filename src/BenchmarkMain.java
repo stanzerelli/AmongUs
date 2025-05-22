@@ -118,7 +118,7 @@ public class BenchmarkMain {
                 elapsedTime = System.currentTimeMillis() - startTime;
                 System.out.println("Elapsed time: " + (elapsedTime / 1000) + " seconds");
 
-                // Optional: Print status every 10 minutes
+
                 if (elapsedTime % (10 * 60 * 1000) < 1000) {
                     System.out.println("Benchmark still running... " + (elapsedTime / 1000) + " seconds elapsed.");
                 }

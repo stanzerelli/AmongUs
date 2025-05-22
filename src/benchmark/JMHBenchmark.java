@@ -17,6 +17,8 @@ import java.util.concurrent.TimeUnit;
 /**
  * JMH benchmark for comparing sequential and parallel implementations
  * This one isn't used, but it is a good example of how to use JMH.
+ * why is this not used? Because firefly used java 14, and I couldn't find the right version of JMH for it.
+ * Possibility would be using maven or gradle to manage dependencies, but the project provided wasn't using it.
  */
 @BenchmarkMode(Mode.AverageTime)
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
